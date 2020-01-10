@@ -1,1 +1,2 @@
-# 带有社交属性的日程表
+# A schedule with social intercourse function
+
