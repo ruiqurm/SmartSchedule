@@ -4,14 +4,15 @@ from rest_framework import generics
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.mixins import RetrieveModelMixin,UpdateModelMixin,\
                                 DestroyModelMixin,CreateModelMixin
 from rest_framework.response import Response
 from django.db.models import Q
-
+from friendship.models import Follow,Friend
 from apps.schedules.serializer import ScheduleSerializer,ScheduleTableSerializer,\
-                                      TodoSerializer
+                                      TodoSerializer,PostSerializer
 from apps.schedules.models import Schedule,ScheduleTable,Todo
 from apps.users.models import UserProfile
 from apps.utils.permission import IsOwner
@@ -22,7 +23,7 @@ TODO:添加一个分页器
 """
 
 class ScheduleViewset(RetrieveModelMixin,UpdateModelMixin,
-                      DestroyModelMixin,GenericViewSet,
+                      DestroyModelMixin,viewsets.GenericViewSet,
                       CreateModelMixin):
     """
     通过pk对Schedule进行获取，更改，删除。
@@ -35,7 +36,7 @@ class ScheduleViewset(RetrieveModelMixin,UpdateModelMixin,
 
 class ScheduleTableViewset(RetrieveModelMixin,UpdateModelMixin,
                            DestroyModelMixin,CreateModelMixin,
-                           GenericViewSet):
+                           viewsets.GenericViewSet):
     """
     通过pk对ScheduleTable进行创建，获取，更改，删除。
     只有用户本人才能执行以上操作。
@@ -47,7 +48,7 @@ class ScheduleTableViewset(RetrieveModelMixin,UpdateModelMixin,
     queryset = ScheduleTable.objects.all()
 
 class TodoViewset(RetrieveModelMixin,UpdateModelMixin,DestroyModelMixin,
-                  GenericViewSet):
+                  viewsets.GenericViewSet):
     """
     通过pk对Todo进行获取，更改，删除。
     只有用户本人才能执行以上操作。
@@ -112,3 +113,24 @@ class ScheduleList(generics.ListAPIView):
                 user_table.get(title=table_title).table_schedule. \
                 filter(Q(start_time__gte=start_time) & Q(end_time__lte=end_time))
 
+class Postviewset(viewsets.ViewSet):
+    authentication_classes = (JSONWebTokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+    @action(methods=['GET'],detail=False)
+    def org(self,request):
+        orgs = Follow.objects.following(request.user)
+        posts = []
+        for org in orgs:
+            posts.extend(org.user_post)
+        return PostSerializer(posts,many=True)
+
+    @action(methods=['GET'], detail=False)
+    def friend(self, request):
+        friends = Friend.objects.friends(request.user)
+        posts = []
+        for friend in friends:
+            posts.extend(friend.user_post)
+        return PostSerializer(posts, many=True)
+
+    # @action(methods=['GET'], detail=False)
+    # def friend(self, request):

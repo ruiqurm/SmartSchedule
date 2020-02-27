@@ -1,6 +1,7 @@
 from django.db import models
-from apps.users.models import UserProfile,OrgProfile
-
+from apps.users.models import UserProfile
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 class CopyMixin():
     """
@@ -41,7 +42,7 @@ class ScheduleTable(models.Model,CopyMixin):
     class Meta:
         unique_together = ("user","title")
     def __str__(self):
-        return f"user:{self.user},title:{self.title}"
+        return f"[日程表 用户:{self.user},标题:{self.title}]"
     @classmethod
     def get_permission_choice(cls):
         """
@@ -206,24 +207,28 @@ class Schedule(BaseSchedule):
         get_latest_by = "start_time"
         ordering = ["start_time","end_time",'weight']
     def __str__(self):
-        return f"title:{self.title},user:{self.user},table:{self.table}" \
-            f",add_time:{self.add_time}"
+        return f"[日程 标题:{self.title},用户:{self.user},日程表:{self.table}]"
     #为0~9，后面会自动处理超出范围的数
-
-
-
-
-def update(user, **kwargs):
-    """
-    A signal receiver which updates the last_login date for
-    the user logging in.
-    """
-    update_fields = []
-    for key, value in kwargs:
-        if hasattr(user, key) and (key != "pk"):
-            setattr(user, key, value)
-            update_fields.append(key)
-    user.save(update_fields=update_fields)
-
-def copy_schedules_by_id(user_id,group_id,schedules):
+class Activity(models.Model):
     pass
+class Post(models.Model):
+    """
+    TODO：此处可以考虑用ContentType和GenericForeignkey
+    """
+    #############
+    #这边后面再考虑改进问题
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    ##############
+    user = models.ForeignKey(UserProfile,on_delete=models.CASCADE,
+                             verbose_name="用户",related_name="user_post")
+    add_time = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
+
+    def __str__(self):
+        return f"用户:{self.user},类型详情:{self.content_object}"
+
+    # @classmethod
+    # def get_POST_TYPE(cls):
+    #     return cls._POST_TYPE
+

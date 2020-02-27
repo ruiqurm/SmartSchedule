@@ -26,6 +26,7 @@ SECRET_KEY = '%23lk%8%#ww=er8(1#dd$drt%g!8=3m63fk&a^s_r3xtr$-gz1'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+#add allow ip
 
 
 # Application definition

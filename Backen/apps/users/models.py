@@ -4,16 +4,19 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Permission
 from friendship.models import Friend,Follow
 
+
+class OrgProfile(models.Model):
+    verified_name = models.CharField(max_length=50,verbose_name="认证名称",unique=True)
+    def __str__(self):
+        return f"认证名称:{self.verified_name}"
+
 class UserProfile(AbstractUser):
     username = models.CharField(max_length=30,verbose_name="用户名",unique=True)
     email = models.EmailField(verbose_name="邮箱",unique=True)
-    is_org = models.BooleanField(verbose_name="机构号",default=False)
-
-class OrgProfile(models.Model):
-    user = models.OneToOneField(UserProfile,on_delete=models.CASCADE,verbose_name="指向用户",
-                                related_name="org")
-    verified_name = models.CharField(max_length=50,verbose_name="认证名称",unique=True)
-
+    org = models.OneToOneField(OrgProfile,on_delete=models.CASCADE,verbose_name="机构号信息",
+                                related_name="user",null=True)
+    def __str__(self):
+        return f"用户名:{self.username}"
 # class Friendship(models.Model):
 #     user = models.ForeignKey(UserProfile, verbose_name="用户1",
 #                                  on_delete=models.DO_NOTHING,

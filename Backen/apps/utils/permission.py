@@ -8,4 +8,4 @@ class IsOwner(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Instance must have an attribute named `owner`.
-        return obj.user == request.user
+        return bool(obj.user == request.user)
